@@ -1,0 +1,77 @@
+﻿@using Microsoft.AspNet.Identity
+@using Microsoft.AspNet.Identity.EntityFramework
+@using Microsoft.Owin.Security
+@{
+    /* can configure passwords allowed
+     * manager.PasswordValidator = new PasswordValidator {
+    RequireDigit = true,
+    RequiredLength = 10,
+    RequireLowercase = true,
+    RequireNonLetterOrDigit = true,
+    RequireUppercase = true
+    };
+    */
+    var statusMessage = string.Empty;
+    if (IsPost)
+    {
+        var userStore = new UserStore<IdentityUser>();
+        var manager = new UserManager<IdentityUser>(userStore);
+
+        var user = new IdentityUser()
+        {
+            UserName = Request["UserName"]
+        };
+        var result = manager.Create(user, Request["Password"]);
+
+        if (result.Succeeded)
+        {
+            var authenticationManager = HttpContext.Current.GetOwinContext().Authentication;
+            var userIdentity = manager.CreateIdentity(user, DefaultAuthenticationTypes.ApplicationCookie);
+            authenticationManager.SignIn(new AuthenticationProperties() { }, userIdentity);
+            Response.Redirect("~/Login");
+        }
+        else
+        {
+            statusMessage = result.Errors.FirstOrDefault();
+        }
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+    <style>
+        body {
+            font: 0.9em Calibri;
+        }
+    </style>
+</head>
+
+<body>
+    <form method="post">
+        <fieldset>
+            <legend>Register a new user</legend>
+            <p>
+                @statusMessage
+            </p>
+            <div style="margin-bottom:10px">
+                @Html.Label("User Name", "UserName")
+                <div>
+                    @Html.TextBox("UserName")
+                </div>
+            </div>
+            <div style="margin-bottom:10px">
+                @Html.Label("Password", "Password")
+                <div>
+                    @Html.Password("Password")
+                </div>
+            </div>
+            <div>
+                <div>
+                    <input type="Submit" value="Register" />
+                </div>
+            </div>
+        </fieldset>
+    </form>
+</body>
+</html>
